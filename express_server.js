@@ -32,7 +32,16 @@ const urlDatabase = {
 //function for generating id
 const generateRandomString = function() {
   return randomstring.generate(6);
-}
+};
+
+const FoundEmail = function (email) {
+  for (let key in users) {
+    if (users[key].email === email){
+      return true;
+    }
+  }
+  return false;
+};
 
 //1st added route, main page that shows all the short urls and long urls (like the urlDB)
 app.get("/urls", (req, res) => {
@@ -78,11 +87,16 @@ app.get("/register", (req, res) => {
 });
 //9th route to handle submittion of register
 app.post("/register", (req, res) => {
-  let Id = generateRandomString();
-  users[Id] = {id: Id, email: req.body.email, password: req.body.password}
-  res.cookie("user_id", Id);
-  res.redirect("/urls")
-  console.log(users);
+  if (req.body.email.length === 0 || req.body.password.length === 0) {
+    res.send("StatusCode Error 400; Something is Broken"); //could impove by res with ejs
+  } if (FoundEmail(req.body.email)) {
+    res.send("StatusCode Error 400; Something is Broken");
+  } else {
+    let Id = generateRandomString();
+    users[Id] = {id: Id, email: req.body.email, password: req.body.password}
+    res.cookie("user_id", Id);
+    res.redirect("/urls")
+  };
 
 });
 
