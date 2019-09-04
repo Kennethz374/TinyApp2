@@ -3,6 +3,10 @@ const app = express();
 const PORT = 8080; // default port 8080
 
 app.set("view engine", "ejs");
+//The body-parser library will convert the request body from a Buffer into string that we can read. 
+//It will then add the data to the req(request) object under the key body.
+const bodyParser = require("body-parser");
+app.use(bodyParser.urlencoded({extended: true}));
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
