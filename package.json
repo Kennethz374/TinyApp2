@@ -19,5 +19,8 @@
   "homepage": "https://github.com/Kennethz374/TinyAppRework#readme",
   "dependencies": {
     "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "nodemon": "^1.19.2"
   }
 }
