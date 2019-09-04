@@ -29,6 +29,12 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars); //pass down the info short and original urls to ejs
 });
 
+//4th routes to added to received form submition from urls/new
+app.post("/urls", (req, res) => {
+  console.log(req.body);  
+  res.send("Ok");        
+});
+
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
