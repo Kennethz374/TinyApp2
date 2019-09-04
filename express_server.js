@@ -59,7 +59,11 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 app.post("/urls/:shortURL", (req, res) => {
   urlDatabase[req.params.shortURL] = req.body.newURL;
   res.redirect(`/urls`);        
-})
+});
+//8th route for register new account
+app.get("/register", (req, res) => {
+  res.render("urls_registration");
+});
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
