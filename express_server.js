@@ -12,7 +12,7 @@ const randomstring = require("randomstring");
 const cookieParser = require('cookie-parser');
 app.use(cookieParser());
 /////////////////////////////////////
-const users = { 
+let users = { 
   "userRandomID": {
     id: "userRandomID", 
     email: "user@example.com", 
@@ -75,6 +75,15 @@ app.post("/urls/:shortURL", (req, res) => {
 //8th route for register new account
 app.get("/register", (req, res) => {
   res.render("urls_registration");
+});
+//9th route to handle submittion of register
+app.post("/register", (req, res) => {
+  let Id = generateRandomString();
+  users[Id] = {id: Id, email: req.body.email, password: req.body.password}
+  res.cookie("user_id", Id);
+  res.redirect("/urls")
+  console.log(users);
+
 });
 
 app.listen(PORT, () => {
