@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/Kennethz374/TinyAppRework/issues"
   },
-  "homepage": "https://github.com/Kennethz374/TinyAppRework#readme"
+  "homepage": "https://github.com/Kennethz374/TinyAppRework#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
 }
