@@ -7,11 +7,18 @@ app.set("view engine", "ejs");
 //It will then add the data to the req(request) object under the key body.
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
+//for randomID Purpose 
+const randomstring = require("randomstring");
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
+
+const generateRandomString = function() {
+  randomstring.generate(6);
+}
+
 //1st added route, main page that shows all the short urls and long urls (like the urlDB)
 app.get("/urls", (req, res) => {
   let templateVars = { urls: urlDatabase }; //pass down the DB to ejs 
