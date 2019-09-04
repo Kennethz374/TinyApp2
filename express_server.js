@@ -14,9 +14,9 @@ const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
-
+//function for generating id
 const generateRandomString = function() {
-  randomstring.generate(6);
+  return randomstring.generate(6);
 }
 
 //1st added route, main page that shows all the short urls and long urls (like the urlDB)
@@ -32,14 +32,20 @@ app.get("/urls/new", (req, res) => {
 
 //2nd added Route page that displays a single url with its shortened url
 app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
+  let templateVars = { "shortURL": req.params.shortURL, "longURL": urlDatabase[req.params.shortURL]};
   res.render("urls_show", templateVars); //pass down the info short and original urls to ejs
 });
 
 //4th routes to added to received form submition from urls/new
 app.post("/urls", (req, res) => {
-  console.log(req.body);  
-  res.send("Ok");        
+  let shortURL = generateRandomString(); //generate id
+  urlDatabase[shortURL] = req.body.longURL; //add data to database
+  res.redirect(`/urls/${shortURL}`);
+});
+//5th routes added to redirect client to it's long url by clickint on the short url
+app.get("/u/:shortURL", (req, res) => {
+  const longURL = urlDatabase[req.params.shortURL];//can't access req.body.longURL
+  res.redirect(longURL);
 });
 
 app.listen(PORT, () => {
