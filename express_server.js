@@ -11,6 +11,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 const randomstring = require("randomstring");
 const cookieParser = require('cookie-parser');
 app.use(cookieParser());
+const bcrypt = require('bcrypt');
 /////////////////////////////////////
 let users = { 
   "userRandomID": {
