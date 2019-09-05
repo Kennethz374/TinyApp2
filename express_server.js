@@ -21,8 +21,8 @@ let users = {
 };
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 //function for generating id
 const generateRandomString = function() {
@@ -78,19 +78,19 @@ app.get("/urls/new", (req, res) => {
 
 //2nd added Route page that displays a single url with its shortened url
 app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = { "shortURL": req.params.shortURL, "longURL": urlDatabase[req.params.shortURL], user: users[req.cookies.user_id]};
+  let templateVars = { "shortURL": req.params.shortURL, "longURL": urlDatabase[req.params.shortURL].longURL, user: users[req.cookies.user_id]};
   res.render("urls_show", templateVars); //pass down the info short and original urls to ejs
 });
 
 //4th routes to added to received form submition from urls/new
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString(); //generate id
-  urlDatabase[shortURL] = req.body.longURL; //add data to database
+  urlDatabase[shortURL] = {longURL: req.body.longURL}; //add data to database
   res.redirect(`/urls/${shortURL}`);
 });
 //5th routes added to redirect client to it's long url by clickint on the short url
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];//can't access req.body.longURL
+  const longURL = urlDatabase[req.params.shortURL].longURL;//can't access req.body.longURL
   res.redirect(longURL);
 });
 //6th route added for delete function
@@ -100,7 +100,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 });
 //7th route post edit/change ulrDB to id/shortURL and redirect to main page
 app.post("/urls/:shortURL", (req, res) => {
-  urlDatabase[req.params.shortURL] = req.body.newURL;
+  urlDatabase[req.params.shortURL].longURL = req.body.newURL;
   res.redirect(`/urls`);        
 });
 //8th route for register new account
