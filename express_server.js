@@ -64,6 +64,7 @@ app.get("/urls", (req, res) => {
     res.redirect("/login");//should print message 
   }
   let templateVars = { urls: urlDatabase, user}; //pass down the DB to ejs 
+  console.log(urlDatabase);
   res.render("urls_index", templateVars)
 });
 
@@ -88,7 +89,7 @@ app.get("/urls/:shortURL", (req, res) => {
 //4th routes to added to received form submition from urls/new
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString(); //generate id
-  urlDatabase[shortURL] = {longURL: req.body.longURL}; //add data to database
+  urlDatabase[shortURL] = {longURL: req.body.longURL, userID: req.cookies.user_id}; //add data to database
   res.redirect(`/urls/${shortURL}`);
 });
 //5th routes added to redirect client to it's long url by clickint on the short url
