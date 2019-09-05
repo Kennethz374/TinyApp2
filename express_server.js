@@ -18,12 +18,7 @@ let users = {
     email: "user@example.com", 
     password: "purple-monkey-dinosaur"
   },
- "user2RandomID": {
-    id: "user2RandomID", 
-    email: "user2@example.com", 
-    password: "dishwasher-funk"
-  }
-} 
+};
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -33,7 +28,7 @@ const urlDatabase = {
 const generateRandomString = function() {
   return randomstring.generate(6);
 };
-
+//if email is found return true, else false
 const FoundEmail = function (email) {
   for (let key in users) {
     if (users[key].email === email){
@@ -42,21 +37,46 @@ const FoundEmail = function (email) {
   }
   return false;
 };
+const Foundpassword = function (email) {
+  for (let key in users) {
+    if (users[key].email === email) {
+      return users[key].password
+    }
+  }
+}
+
+const findId = function(email) {
+  for (let key in users) {
+    if(users[key].email === email) {
+      return key;
+    }
+  }
+};
 
 //1st added route, main page that shows all the short urls and long urls (like the urlDB)
 app.get("/urls", (req, res) => {
-  let templateVars = { urls: urlDatabase }; //pass down the DB to ejs 
-  res.render("urls_index", templateVars);
+  let user = null;
+
+  if(users[req.cookies.user_id]) {
+    user = users[req.cookies.user_id].email;
+  };
+  let templateVars = { urls: urlDatabase, user}; //pass down the DB to ejs 
+  res.render("urls_index", templateVars)
 });
 
 //3rd route added above second one to prevent js mis-interpret new as a short url; A form to display and create new urls
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  let user = null;
+  if(users[req.cookies.user_id]) {
+    user = users[req.cookies.user_id].email;
+  }
+  let templateVars = { urls: urlDatabase, user};
+  res.render("urls_new", templateVars);
 });
 
 //2nd added Route page that displays a single url with its shortened url
 app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = { "shortURL": req.params.shortURL, "longURL": urlDatabase[req.params.shortURL]};
+  let templateVars = { "shortURL": req.params.shortURL, "longURL": urlDatabase[req.params.shortURL], user: users[req.cookies.user_id]};
   res.render("urls_show", templateVars); //pass down the info short and original urls to ejs
 });
 
@@ -83,21 +103,40 @@ app.post("/urls/:shortURL", (req, res) => {
 });
 //8th route for register new account
 app.get("/register", (req, res) => {
-  res.render("urls_registration");
+  let templateVars = {user: users[req.cookies.user_id]}
+  res.render("urls_registration", templateVars);
 });
 //9th route to handle submittion of register
 app.post("/register", (req, res) => {
   if (req.body.email.length === 0 || req.body.password.length === 0) {
     res.send("StatusCode Error 400; Something is Broken"); //could impove by res with ejs
   } if (FoundEmail(req.body.email)) {
-    res.send("StatusCode Error 400; Something is Broken");
+    res.send("StatusCode Error 400; Something is Broken");//could improve by res with ejs
   } else {
     let Id = generateRandomString();
     users[Id] = {id: Id, email: req.body.email, password: req.body.password}
     res.cookie("user_id", Id);
-    res.redirect("/urls")
+    res.redirect("/urls");
+    console.log(req.cookies.user_id);
   };
-
+});
+//10th route
+app.post("/login", (req, res) => {
+  if(FoundEmail(req.body.email) && Foundpassword(req.body.email) === req.body.password) {
+    res.cookie("user_id", findId(req.body.email));
+    res.redirect("/urls");
+  } else {
+    res.send("error code 403, Account does not exist please try again");
+  }
+});
+//11th route
+app.post("/logout", (req, res) => {
+  res.clearCookie("user_id"); //set logout
+  res.redirect('/urls');
+});
+//12 routes
+app.get("/login", (req, res) => {
+  res.render("urls_login", {user: users[req.cookies.user_id]});
 });
 
 app.listen(PORT, () => {
