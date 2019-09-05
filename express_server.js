@@ -3,26 +3,27 @@ const app = express();
 const PORT = 8080; // default port 8080
 
 app.set("view engine", "ejs");
-//The body-parser library will convert the request body from a Buffer into string that we can read. 
+//The body-parser library will convert the request body from a Buffer into string that we can read.
 //It will then add the data to the req(request) object under the key body.
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
-//for randomID Purpose 
+//for randomID Purpose
 const randomstring = require("randomstring");
 const cookieParser = require('cookie-parser');//need to be replaced
 const cookieSession = require('cookie-session');
 app.use(cookieParser());
 app.use(cookieSession({
-  name: 'user_id',
+  name: 'userId',
   keys: ['keysssss'],
-}))
+}));
 
 const bcrypt = require('bcrypt');
-/////////////////////////////////////
-let users = { 
+const { findIdByEmail } = require("./helpers");
+//----------------------------------------Database-------------------------
+let users = {
   "userRandomID": {
-    id: "userRandomID", 
-    email: "user@example.com", 
+    id: "userRandomID",
+    email: "user@example.com",
     password: "purple-monkey-dinosaur",
     hashedPassword: "123sjdfaidqpwijfaf"
   },
@@ -32,55 +33,47 @@ const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
   i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
-
-const UrlOfId = function (userID, database) {
+//--------------------------matching function find urls that match user ID
+const UrlOfId = function(userID, database) {
   let userProfile = {};
   for (let shorUrl in database) {
-    if(urlDatabase[shorUrl].userID === userID) {
+    if (urlDatabase[shorUrl].userID === userID) {
       userProfile[shorUrl] = urlDatabase[shorUrl];
     }
   }
-  return userProfile; 
-}
+  return userProfile;
+};
 //function for generating id
 const generateRandomString = function() {
   return randomstring.generate(6);
 };
 //if email is found return true, else false
-const FoundEmail = function (email) {
+const FoundEmail = function(email) {
   for (let key in users) {
-    if (users[key].email === email){
+    if (users[key].email === email) {
       return true;
     }
   }
   return false;
 };
-//enter email and find the matching id
-const findIdByEmail = function(email, database) {
-  for (let key in database) {
-    if(users[key].email === email) {
-      return key;
-    }
-  }
-};
-
+//---------------------------------------------------------------------------
 //1st added route, main page that shows all the short urls and long urls (like the urlDB)
 app.get("/urls", (req, res) => {
   let user = null;
-  if(users[req.session.user_id]) {
-    user = users[req.session.user_id].email;
+  if (users[req.session.userId]) {
+    user = users[req.session.userId].email;
   } else {
-    res.redirect("/login");//should print message 
+    res.redirect("/login");//should print message
   }
-  let templateVars = { urls: UrlOfId(req.session.user_id, urlDatabase), user}; //pass down the DB to ejs 
-  res.render("urls_index", templateVars)
+  let templateVars = { urls: UrlOfId(req.session.userId, urlDatabase), user}; //pass down the DB to ejs
+  res.render("urls_index", templateVars);
 });
 
-//3rd route added above second one to prevent js mis-interpret new as a short url; A form to display and create new urls
+//3rd route added, above second one to prevent js mis-interpret new as a short url; A form to display and create new urls
 app.get("/urls/new", (req, res) => {
   let user = null;
-  if(users[req.session.user_id]) {
-    user = users[req.session.user_id].email;
+  if (users[req.session.userId]) {
+    user = users[req.session.userId].email;
   } else {
     res.redirect("/login");//added else statement if cookies is empty means not login, redirect to login
   }
@@ -91,10 +84,10 @@ app.get("/urls/new", (req, res) => {
 //2nd added Route page that displays a single url with its shortened url
 app.get("/urls/:shortURL", (req, res) => {
   let user = null;
-  if (urlDatabase[req.params.shortURL].userID === req.session.user_id) {
-    user = users[req.session.user_id].email;
-  let templateVars = { "shortURL": req.params.shortURL, "longURL": urlDatabase[req.params.shortURL].longURL, user};
-  res.render("urls_show", templateVars); //pass down the info short and original urls to ejs
+  if (urlDatabase[req.params.shortURL].userID === req.session.userId) {
+    user = users[req.session.userId].email;
+    let templateVars = { "shortURL": req.params.shortURL, "longURL": urlDatabase[req.params.shortURL].longURL, user};
+    res.render("urls_show", templateVars); //pass down the info short and original urls to ejs
   } else {
     res.send("User needs to login or Url does not belong to User, please create a new one");
   }
@@ -103,7 +96,7 @@ app.get("/urls/:shortURL", (req, res) => {
 //4th routes to added to received form submition from urls/new
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString(); //generate id
-  urlDatabase[shortURL] = {longURL: req.body.longURL, userID: req.session.user_id}; //add data to database
+  urlDatabase[shortURL] = {longURL: req.body.longURL, userID: req.session.userId}; //add data to database
   res.redirect(`/urls/${shortURL}`);
 });
 //5th routes added to redirect client to it's long url by clickint on the short url
@@ -113,25 +106,25 @@ app.get("/u/:shortURL", (req, res) => {
 });
 //6th route added for delete function
 app.post("/urls/:shortURL/delete", (req, res) => {
-  if (req.session.user_id !== urlDatabase[req.params.shortURL].userID) {
-    res.send("You can't delete the shortURL because you are not the owner")
+  if (req.session.userId !== urlDatabase[req.params.shortURL].userID) {
+    res.send("You can't delete the shortURL because you are not the owner");
   } else {
-  delete urlDatabase[req.params.shortURL];
-  res.redirect(`/urls`);
+    delete urlDatabase[req.params.shortURL];
+    res.redirect(`/urls`);
   }
 });
 //7th route post edit/change ulrDB to id/shortURL and redirect to main page
 app.post("/urls/:shortURL", (req, res) => {
-  if (req.session.user_id !== urlDatabase[req.params.shortURL].userID) {
-    res.send("You can't Edit the shortURL because you are not the owner")
+  if (req.session.userId !== urlDatabase[req.params.shortURL].userID) {
+    res.send("You can't Edit the shortURL because you are not the owner");
   } else {
-  urlDatabase[req.params.shortURL].longURL = req.body.newURL;
-  res.redirect(`/urls`);   
-  }     
+    urlDatabase[req.params.shortURL].longURL = req.body.newURL;
+    res.redirect(`/urls`);
+  }
 });
 //8th route for register new account
 app.get("/register", (req, res) => {
-  let templateVars = {user: users[req.session.user_id]}
+  let templateVars = {user: users[req.session.userId]};
   res.render("urls_registration", templateVars);
 });
 //9th route to handle submittion of register
@@ -142,15 +135,15 @@ app.post("/register", (req, res) => {
     res.send("StatusCode Error 400; You've been registered");//could improve by res with ejs
   } else {
     let Id = generateRandomString();
-    users[Id] = {id: Id, email: req.body.email, hashedPassword: bcrypt.hashSync(req.body.password, 10), password: req.body.password}
-    req.session.user_id = Id;
+    users[Id] = {id: Id, email: req.body.email, hashedPassword: bcrypt.hashSync(req.body.password, 10), password: req.body.password};
+    req.session.userId = Id;
     res.redirect("/urls");
-  };
+  }
 });
 //10th route
 app.post("/login", (req, res) => {
-  if(FoundEmail(req.body.email) && bcrypt.compareSync(req.body.password, users[findIdByEmail(req.body.email), users].hashedPassword)) {
-    req.session.user_id = findIdByEmail(req.body.email, users);
+  if (FoundEmail(req.body.email) && bcrypt.compareSync(req.body.password, users[findIdByEmail(req.body.email, users)].hashedPassword)) {
+    req.session.userId = findIdByEmail(req.body.email, users);
     res.redirect("/urls");
   } else {
     res.send("error code 403, Account does not exist please try again");
@@ -158,12 +151,12 @@ app.post("/login", (req, res) => {
 });
 //11th route
 app.post("/logout", (req, res) => {
-  req.session.user_id = null; //set logout
+  req.session.userId = null; //set logout
   res.redirect('/login');
 });
 //12 routes
 app.get("/login", (req, res) => {
-  res.render("urls_login", {user: users[req.session.user_id]});
+  res.render("urls_login", {user: users[req.session.userId]});
 });
 
 app.listen(PORT, () => {

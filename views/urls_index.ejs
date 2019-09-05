@@ -28,9 +28,11 @@
           <tr>
             <td><%= ShortUrl %></td>
             <td><%= urls[ShortUrl].longURL %></td>
-            <td><form method="POST" action="/urls/<%= ShortUrl %>/delete">
-              <button type="submit" class="btn btn-primary">Edit</button>
-            </form></td>
+            <td>
+              <a href="/urls/<%= ShortUrl %>">
+                <button class="btn btn-primary">Edit</button>
+              </a>
+            </td>
             <td><form method="POST" action="/urls/<%= ShortUrl %>/delete">
               <button type="submit" class="btn btn-primary">Delete</button>
             </form></td>
