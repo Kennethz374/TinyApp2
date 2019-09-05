@@ -114,13 +114,21 @@ app.get("/u/:shortURL", (req, res) => {
 });
 //6th route added for delete function
 app.post("/urls/:shortURL/delete", (req, res) => {
+  if (req.cookies.user_id !== urlDatabase[req.params.shortURL].userID) {
+    res.send("You can't delete the shortURL because you are not the owner")
+  } else {
   delete urlDatabase[req.params.shortURL];
   res.redirect(`/urls`);
+  }
 });
 //7th route post edit/change ulrDB to id/shortURL and redirect to main page
 app.post("/urls/:shortURL", (req, res) => {
+  if (req.cookies.user_id !== urlDatabase[req.params.shortURL].userID) {
+    res.send("You can't Edit the shortURL because you are not the owner")
+  } else {
   urlDatabase[req.params.shortURL].longURL = req.body.newURL;
-  res.redirect(`/urls`);        
+  res.redirect(`/urls`);   
+  }     
 });
 //8th route for register new account
 app.get("/register", (req, res) => {
