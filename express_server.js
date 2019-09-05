@@ -56,8 +56,8 @@ const FoundEmail = function (email) {
   return false;
 };
 //enter email and find the matching id
-const findId = function(email) {
-  for (let key in users) {
+const findIdByEmail = function(email, database) {
+  for (let key in database) {
     if(users[key].email === email) {
       return key;
     }
@@ -73,7 +73,6 @@ app.get("/urls", (req, res) => {
     res.redirect("/login");//should print message 
   }
   let templateVars = { urls: UrlOfId(req.session.user_id, urlDatabase), user}; //pass down the DB to ejs 
-  console.log(users);
   res.render("urls_index", templateVars)
 });
 
@@ -150,8 +149,8 @@ app.post("/register", (req, res) => {
 });
 //10th route
 app.post("/login", (req, res) => {
-  if(FoundEmail(req.body.email) && bcrypt.compareSync(req.body.password, users[findId(req.body.email)].hashedPassword)) {
-    req.session.user_id = findId(req.body.email);
+  if(FoundEmail(req.body.email) && bcrypt.compareSync(req.body.password, users[findIdByEmail(req.body.email), users].hashedPassword)) {
+    req.session.user_id = findIdByEmail(req.body.email, users);
     res.redirect("/urls");
   } else {
     res.send("error code 403, Account does not exist please try again");
