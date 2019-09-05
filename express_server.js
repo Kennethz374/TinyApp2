@@ -9,8 +9,14 @@ const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 //for randomID Purpose 
 const randomstring = require("randomstring");
-const cookieParser = require('cookie-parser');
+const cookieParser = require('cookie-parser');//need to be replaced
+const cookieSession = require('cookie-session');
 app.use(cookieParser());
+app.use(cookieSession({
+  name: 'user_id',
+  keys: ['keysssss'],
+}))
+
 const bcrypt = require('bcrypt');
 /////////////////////////////////////
 let users = { 
@@ -49,14 +55,6 @@ const FoundEmail = function (email) {
   }
   return false;
 };
-//enter email and find the password of that email
-const Foundpassword = function (email) {
-  for (let key in users) {
-    if (users[key].email === email) {
-      return users[key].password
-    }
-  }
-}
 //enter email and find the matching id
 const findId = function(email) {
   for (let key in users) {
@@ -69,12 +67,12 @@ const findId = function(email) {
 //1st added route, main page that shows all the short urls and long urls (like the urlDB)
 app.get("/urls", (req, res) => {
   let user = null;
-  if(users[req.cookies.user_id]) {
-    user = users[req.cookies.user_id].email;
+  if(users[req.session.user_id]) {
+    user = users[req.session.user_id].email;
   } else {
     res.redirect("/login");//should print message 
   }
-  let templateVars = { urls: UrlOfId(req.cookies.user_id, urlDatabase), user}; //pass down the DB to ejs 
+  let templateVars = { urls: UrlOfId(req.session.user_id, urlDatabase), user}; //pass down the DB to ejs 
   console.log(users);
   res.render("urls_index", templateVars)
 });
@@ -82,8 +80,8 @@ app.get("/urls", (req, res) => {
 //3rd route added above second one to prevent js mis-interpret new as a short url; A form to display and create new urls
 app.get("/urls/new", (req, res) => {
   let user = null;
-  if(users[req.cookies.user_id]) {
-    user = users[req.cookies.user_id].email;
+  if(users[req.session.user_id]) {
+    user = users[req.session.user_id].email;
   } else {
     res.redirect("/login");//added else statement if cookies is empty means not login, redirect to login
   }
@@ -94,8 +92,8 @@ app.get("/urls/new", (req, res) => {
 //2nd added Route page that displays a single url with its shortened url
 app.get("/urls/:shortURL", (req, res) => {
   let user = null;
-  if (urlDatabase[req.params.shortURL].userID === req.cookies.user_id) {
-    user = users[req.cookies.user_id].email;
+  if (urlDatabase[req.params.shortURL].userID === req.session.user_id) {
+    user = users[req.session.user_id].email;
   let templateVars = { "shortURL": req.params.shortURL, "longURL": urlDatabase[req.params.shortURL].longURL, user};
   res.render("urls_show", templateVars); //pass down the info short and original urls to ejs
   } else {
@@ -106,7 +104,7 @@ app.get("/urls/:shortURL", (req, res) => {
 //4th routes to added to received form submition from urls/new
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString(); //generate id
-  urlDatabase[shortURL] = {longURL: req.body.longURL, userID: req.cookies.user_id}; //add data to database
+  urlDatabase[shortURL] = {longURL: req.body.longURL, userID: req.session.user_id}; //add data to database
   res.redirect(`/urls/${shortURL}`);
 });
 //5th routes added to redirect client to it's long url by clickint on the short url
@@ -116,7 +114,7 @@ app.get("/u/:shortURL", (req, res) => {
 });
 //6th route added for delete function
 app.post("/urls/:shortURL/delete", (req, res) => {
-  if (req.cookies.user_id !== urlDatabase[req.params.shortURL].userID) {
+  if (req.session.user_id !== urlDatabase[req.params.shortURL].userID) {
     res.send("You can't delete the shortURL because you are not the owner")
   } else {
   delete urlDatabase[req.params.shortURL];
@@ -125,7 +123,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 });
 //7th route post edit/change ulrDB to id/shortURL and redirect to main page
 app.post("/urls/:shortURL", (req, res) => {
-  if (req.cookies.user_id !== urlDatabase[req.params.shortURL].userID) {
+  if (req.session.user_id !== urlDatabase[req.params.shortURL].userID) {
     res.send("You can't Edit the shortURL because you are not the owner")
   } else {
   urlDatabase[req.params.shortURL].longURL = req.body.newURL;
@@ -134,7 +132,7 @@ app.post("/urls/:shortURL", (req, res) => {
 });
 //8th route for register new account
 app.get("/register", (req, res) => {
-  let templateVars = {user: users[req.cookies.user_id]}
+  let templateVars = {user: users[req.session.user_id]}
   res.render("urls_registration", templateVars);
 });
 //9th route to handle submittion of register
@@ -146,14 +144,14 @@ app.post("/register", (req, res) => {
   } else {
     let Id = generateRandomString();
     users[Id] = {id: Id, email: req.body.email, hashedPassword: bcrypt.hashSync(req.body.password, 10), password: req.body.password}
-    res.cookie("user_id", Id);
+    req.session.user_id = Id;
     res.redirect("/urls");
   };
 });
 //10th route
 app.post("/login", (req, res) => {
   if(FoundEmail(req.body.email) && bcrypt.compareSync(req.body.password, users[findId(req.body.email)].hashedPassword)) {
-    res.cookie("user_id", findId(req.body.email));
+    req.session.user_id = findId(req.body.email);
     res.redirect("/urls");
   } else {
     res.send("error code 403, Account does not exist please try again");
@@ -161,12 +159,12 @@ app.post("/login", (req, res) => {
 });
 //11th route
 app.post("/logout", (req, res) => {
-  res.clearCookie("user_id"); //set logout
+  req.session.user_id = null; //set logout
   res.redirect('/login');
 });
 //12 routes
 app.get("/login", (req, res) => {
-  res.render("urls_login", {user: users[req.cookies.user_id]});
+  res.render("urls_login", {user: users[req.session.user_id]});
 });
 
 app.listen(PORT, () => {
