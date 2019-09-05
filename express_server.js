@@ -25,6 +25,15 @@ const urlDatabase = {
   i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 
+const UrlOfId = function (userID, database) {
+  let userProfile = {};
+  for (let shorUrl in database) {
+    if(urlDatabase[shorUrl].userID === userID) {
+      userProfile[shorUrl] = urlDatabase[shorUrl];
+    }
+  }
+  return userProfile; 
+}
 //function for generating id
 const generateRandomString = function() {
   return randomstring.generate(6);
@@ -63,7 +72,7 @@ app.get("/urls", (req, res) => {
   } else {
     res.redirect("/login");//should print message 
   }
-  let templateVars = { urls: urlDatabase, user}; //pass down the DB to ejs 
+  let templateVars = { urls: UrlOfId(req.cookies.user_id, urlDatabase), user}; //pass down the DB to ejs 
   console.log(urlDatabase);
   res.render("urls_index", templateVars)
 });
@@ -82,8 +91,14 @@ app.get("/urls/new", (req, res) => {
 
 //2nd added Route page that displays a single url with its shortened url
 app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = { "shortURL": req.params.shortURL, "longURL": urlDatabase[req.params.shortURL].longURL, user: users[req.cookies.user_id].email};
+  let user = null;
+  if (urlDatabase[req.params.shortURL].userID === req.cookies.user_id) {
+    user = users[req.cookies.user_id].email;
+  let templateVars = { "shortURL": req.params.shortURL, "longURL": urlDatabase[req.params.shortURL].longURL, user};
   res.render("urls_show", templateVars); //pass down the info short and original urls to ejs
+  } else {
+    res.send("User needs to login or Url does not belong to User, please create a new one");
+  }
 });
 
 //4th routes to added to received form submition from urls/new
