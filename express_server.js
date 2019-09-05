@@ -69,6 +69,8 @@ app.get("/urls/new", (req, res) => {
   let user = null;
   if(users[req.cookies.user_id]) {
     user = users[req.cookies.user_id].email;
+  } else {
+    res.redirect("/login");//added else statement if cookies is empty means not login, redirect to login
   }
   let templateVars = { urls: urlDatabase, user};
   res.render("urls_new", templateVars);
