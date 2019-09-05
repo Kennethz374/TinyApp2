@@ -17,7 +17,8 @@ let users = {
   "userRandomID": {
     id: "userRandomID", 
     email: "user@example.com", 
-    password: "purple-monkey-dinosaur"
+    password: "purple-monkey-dinosaur",
+    hashedPassword: "123sjdfaidqpwijfaf"
   },
 };
 
@@ -74,7 +75,7 @@ app.get("/urls", (req, res) => {
     res.redirect("/login");//should print message 
   }
   let templateVars = { urls: UrlOfId(req.cookies.user_id, urlDatabase), user}; //pass down the DB to ejs 
-  console.log(urlDatabase);
+  console.log(users);
   res.render("urls_index", templateVars)
 });
 
@@ -141,17 +142,17 @@ app.post("/register", (req, res) => {
   if (req.body.email.length === 0 || req.body.password.length === 0) {
     res.send("StatusCode Error 400; Something is Broken"); //could impove by res with ejs
   } if (FoundEmail(req.body.email)) {
-    res.send("StatusCode Error 400; Something is Broken");//could improve by res with ejs
+    res.send("StatusCode Error 400; You've been registered");//could improve by res with ejs
   } else {
     let Id = generateRandomString();
-    users[Id] = {id: Id, email: req.body.email, password: req.body.password}
+    users[Id] = {id: Id, email: req.body.email, hashedPassword: bcrypt.hashSync(req.body.password, 10), password: req.body.password}
     res.cookie("user_id", Id);
     res.redirect("/urls");
   };
 });
 //10th route
 app.post("/login", (req, res) => {
-  if(FoundEmail(req.body.email) && Foundpassword(req.body.email) === req.body.password) {
+  if(FoundEmail(req.body.email) && bcrypt.compareSync(req.body.password, users[findId(req.body.email)].hashedPassword)) {
     res.cookie("user_id", findId(req.body.email));
     res.redirect("/urls");
   } else {
