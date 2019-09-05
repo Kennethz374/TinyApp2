@@ -38,6 +38,7 @@ const FoundEmail = function (email) {
   }
   return false;
 };
+//enter email and find the password of that email
 const Foundpassword = function (email) {
   for (let key in users) {
     if (users[key].email === email) {
@@ -45,7 +46,7 @@ const Foundpassword = function (email) {
     }
   }
 }
-
+//enter email and find the matching id
 const findId = function(email) {
   for (let key in users) {
     if(users[key].email === email) {
@@ -57,7 +58,6 @@ const findId = function(email) {
 //1st added route, main page that shows all the short urls and long urls (like the urlDB)
 app.get("/urls", (req, res) => {
   let user = null;
-
   if(users[req.cookies.user_id]) {
     user = users[req.cookies.user_id].email;
   } else {
@@ -75,14 +75,13 @@ app.get("/urls/new", (req, res) => {
   } else {
     res.redirect("/login");//added else statement if cookies is empty means not login, redirect to login
   }
-  let templateVars = { urls: urlDatabase, user};
-  console.log(urlDatabase);
+  let templateVars = { urls: urlDatabase, user: user};
   res.render("urls_new", templateVars);
 });
 
 //2nd added Route page that displays a single url with its shortened url
 app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = { "shortURL": req.params.shortURL, "longURL": urlDatabase[req.params.shortURL].longURL, user: users[req.cookies.user_id]};
+  let templateVars = { "shortURL": req.params.shortURL, "longURL": urlDatabase[req.params.shortURL].longURL, user: users[req.cookies.user_id].email};
   res.render("urls_show", templateVars); //pass down the info short and original urls to ejs
 });
 
@@ -123,7 +122,6 @@ app.post("/register", (req, res) => {
     users[Id] = {id: Id, email: req.body.email, password: req.body.password}
     res.cookie("user_id", Id);
     res.redirect("/urls");
-    console.log(req.cookies.user_id);
   };
 });
 //10th route
@@ -138,7 +136,7 @@ app.post("/login", (req, res) => {
 //11th route
 app.post("/logout", (req, res) => {
   res.clearCookie("user_id"); //set logout
-  res.redirect('/urls');
+  res.redirect('/login');
 });
 //12 routes
 app.get("/login", (req, res) => {
