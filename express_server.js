@@ -24,6 +24,7 @@ const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
   i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
+
 //function for generating id
 const generateRandomString = function() {
   return randomstring.generate(6);
@@ -59,7 +60,9 @@ app.get("/urls", (req, res) => {
 
   if(users[req.cookies.user_id]) {
     user = users[req.cookies.user_id].email;
-  };
+  } else {
+    res.redirect("/login");//should print message 
+  }
   let templateVars = { urls: urlDatabase, user}; //pass down the DB to ejs 
   res.render("urls_index", templateVars)
 });
@@ -73,6 +76,7 @@ app.get("/urls/new", (req, res) => {
     res.redirect("/login");//added else statement if cookies is empty means not login, redirect to login
   }
   let templateVars = { urls: urlDatabase, user};
+  console.log(urlDatabase);
   res.render("urls_new", templateVars);
 });
 
