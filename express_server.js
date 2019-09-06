@@ -101,8 +101,12 @@ app.post("/urls", (req, res) => {
 });
 //5th routes added to redirect client to it's long url by clickint on the short url
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL].longURL;//can't access req.body.longURL
-  res.redirect(longURL);
+  if (urlDatabase[req.params.shortURL]) {
+    const longURL = urlDatabase[req.params.shortURL].longURL;//can't access req.body.longURL
+    res.redirect(longURL);
+  } else {
+    res.send("Sorry!! The shortURL does not exist");
+  }
 });
 //6th route added for delete function
 app.post("/urls/:shortURL/delete", (req, res) => {
